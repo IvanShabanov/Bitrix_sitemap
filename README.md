@@ -29,10 +29,10 @@ Sitemap.xml для 1С Битрикс
       $sitemap->AddIgnorePage($http.$host.'/hidden/');
 
 3) в init.php добавить строчку 
-   
+      
       include_once('sitemap.php');
 
 
 4) Добавить агента 
-   
+
       GenerateSitemapXmlExt();

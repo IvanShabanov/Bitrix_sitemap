@@ -1,5 +1,5 @@
 <?
-include_once('class_sitemap.php');
+include_once(__DIR__.'/class_sitemap.php');
 
 CModule::IncludeModule("iblock");
 

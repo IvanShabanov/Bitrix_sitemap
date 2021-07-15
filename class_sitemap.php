@@ -138,7 +138,22 @@ class sitemapXmlExt {
     }
     /******************************************************/
     function show() {
+		
         $pages = $this->pages;
+		$result = '';
+		
+		if (is_array($pages)){
+			if(count($pages) > 2000){
+				$this->generate_multi($pages);
+			}else{
+				$this->generate_one($pages, true);
+			}
+		}
+        return $result;
+
+    }  
+	
+	function generate_one($pages, $simple=true, $num = 1) {
         if (is_array($pages)){
             $result = '<?xml version="1.0" encoding="UTF-8"?>'."\n".
                         '<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">';
@@ -157,8 +172,49 @@ class sitemapXmlExt {
             }
             $result .= '</urlset>';
         }
-        return $result;
+		
+		if($simple === true){
+			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap.xml', $result);
+		}else{
+			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap_'.$num.'.xml', $result);
+		}
+	}
 
-    }  
+	function generate_multi($pages) {
+		$http = 'https://';
+		$SERVER_HTTP_HOST = $_SERVER['HTTP_HOST'];
+		
+		$file_num = 1;
+        if (is_array($pages)){
+			$count = 0;
+			$pages_arr = array();
+			// перебираем массив страниц, подсчитываем, сколько файлов будем создавать
+			foreach($pages as $key=>$page){
+				$pages_arr[$file_num][$key] = $page;
+				$count++;
+				if($count >= 2000){
+					$file_num++;
+					$count = 0;
+				}
+			}
+			
+			// создаем файлы
+			foreach($pages_arr as $key=>$page){
+				$this->generate_one($page, false, $key);
+			}
+			
+			//создаем общий файл sitemap.xml
+			$result = '<?xml version="1.0" encoding="UTF-8"?>'."\n".
+			'<sitemapindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">';
+				for($i=1; $i<=count($pages_arr); $i++){
+					$result .= '<sitemap>
+						<loc>'.$http.$SERVER_HTTP_HOST.'/sitemap_'.$i.'.xml</loc>
+						<lastmod>'.date('Y-m-01').'</lastmod>
+					</sitemap>';
+				}
+			$result .= '</sitemapindex>';
+			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap.xml', $result);
+        }
+	}
 };
 ?>

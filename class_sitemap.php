@@ -4,16 +4,20 @@ class sitemapXmlExt {
     var $ignore = array();
     var $iBlocks = array();
     var $pages = array();
+    var $sitemap = array();
     function __construct($iBlocks = array(), $ignorePages = array()) {
         $this->iBlocks = $iBlocks;
         $this->ignore = $ignorePages;
     }
     /*******************************************************/
+    function SetDocumentRoot($DocRoot) {
+        $this->DOCUMENT_ROOT = $DocRoot;
+    }
+    /*******************************************************/
     function generate($home_url) {
+        $this->HomeUrl = $home_url;
         $this->AddPagesFromIBlock($home_url, $this->iBlocks);
         $this->pages = $this->DeleteIgnorePages();
-        return $result;
-
     }
     /***************************************/
     function array_merge($array, $arrayAdd) {
@@ -41,7 +45,7 @@ class sitemapXmlExt {
             }
         }
         return $result;
-    } 
+    }
     /***************************************/
     function AddPage($url, $priority = 1, $lastmod = '', $changefreq = 'monthly'){
         if (!in_array($url, $this->ignore)) {
@@ -56,12 +60,12 @@ class sitemapXmlExt {
             if ($changefreq != '') {
                 $page['changefreq'] = $changefreq;
             };
-            $this->pages[] = $page;    
+            $this->pages[] = $page;
         }
     }/***************************************/
     function AddIgnorePage($url){
-        $this->ignore[] = $url;    
-    }  
+        $this->ignore[] = $url;
+    }
     /***************************************/
     function CalcPriorBySlash($link) {
         $link = str_replace(array('http://','https://'), '', $link);
@@ -72,7 +76,7 @@ class sitemapXmlExt {
             $prior = 0.4;
         }
         return $prior;
-    }    
+    }
     /***************************************/
     function AddPagesFromIBlock ($parentloc, $arIBlocks) {
         if (is_array($arIBlocks)) {
@@ -137,23 +141,11 @@ class sitemapXmlExt {
         }
     }
     /******************************************************/
-    function show() {
-		
+    function Show($offset = 0, $length = 0) {
         $pages = $this->pages;
-		$result = '';
-		
-		if (is_array($pages)){
-			if(count($pages) > 2000){
-				$this->generate_multi($pages);
-			}else{
-				$this->generate_one($pages, true);
-			}
-		}
-        return $result;
-
-    }  
-	
-	function generate_one($pages, $simple=true, $num = 1) {
+        if (($offset > 0) || ($length > 0)) {
+            $pages = array_slice($pages, $offset, $length);
+        };
         if (is_array($pages)){
             $result = '<?xml version="1.0" encoding="UTF-8"?>'."\n".
                         '<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">';
@@ -172,49 +164,27 @@ class sitemapXmlExt {
             }
             $result .= '</urlset>';
         }
-		
-		if($simple === true){
-			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap.xml', $result);
-		}else{
-			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap_'.$num.'.xml', $result);
-		}
-	}
+        return $result;
+    }
 
-	function generate_multi($pages) {
-		$http = 'https://';
-		$SERVER_HTTP_HOST = $_SERVER['HTTP_HOST'];
-		
-		$file_num = 1;
-        if (is_array($pages)){
-			$count = 0;
-			$pages_arr = array();
-			// перебираем массив страниц, подсчитываем, сколько файлов будем создавать
-			foreach($pages as $key=>$page){
-				$pages_arr[$file_num][$key] = $page;
-				$count++;
-				if($count >= 2000){
-					$file_num++;
-					$count = 0;
-				}
-			}
-			
-			// создаем файлы
-			foreach($pages_arr as $key=>$page){
-				$this->generate_one($page, false, $key);
-			}
-			
-			//создаем общий файл sitemap.xml
-			$result = '<?xml version="1.0" encoding="UTF-8"?>'."\n".
-			'<sitemapindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">';
-				for($i=1; $i<=count($pages_arr); $i++){
-					$result .= '<sitemap>
-						<loc>'.$http.$SERVER_HTTP_HOST.'/sitemap_'.$i.'.xml</loc>
-						<lastmod>'.date('Y-m-01').'</lastmod>
-					</sitemap>';
-				}
-			$result .= '</sitemapindex>';
-			@file_put_contents($_SERVER['DOCUMENT_ROOT'].'/sitemap.xml', $result);
+    function AddToSitemapIndex($linkToSitemap) {
+        $this->sitemap[] = $linkToSitemap;
+    }
+
+    function ShowSitemapIndex() {
+        $sitemaps = $this->sitemap;
+        if (is_array($sitemaps)){
+            $result = '<?xml version="1.0" encoding="UTF-8"?>
+                    <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                    ';
+            foreach ($sitemaps as $sitemap) {
+                $result .= '<sitemap>';
+                $result .= '<loc>'.$sitemap.'</loc>';
+                $result .= '<lastmod>'.date().'</lastmod>';
+                $result .= '</sitemap>';
+            }
         }
-	}
+        $result .= '</sitemapindex>';
+        return $result;
+    }
 };
-?>

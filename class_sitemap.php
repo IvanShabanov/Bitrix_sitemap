@@ -5,18 +5,15 @@ class sitemapXmlExt {
     var $iBlocks = array();
     var $pages = array();
     var $sitemap = array();
-    function __construct($iBlocks = array(), $ignorePages = array()) {
+
+    function __construct($home_url, $iBlocks = array(), $ignorePages = array()) {
         $this->iBlocks = $iBlocks;
         $this->ignore = $ignorePages;
-    }
-    /*******************************************************/
-    function SetDocumentRoot($DocRoot) {
-        $this->DOCUMENT_ROOT = $DocRoot;
-    }
-    /*******************************************************/
-    function generate($home_url) {
         $this->HomeUrl = $home_url;
-        $this->AddPagesFromIBlock($home_url, $this->iBlocks);
+    }
+    /***************************************/
+    function generate() {
+        $this->AddPagesFromIBlock();
         $this->pages = $this->DeleteIgnorePages();
     }
     /***************************************/
@@ -50,7 +47,7 @@ class sitemapXmlExt {
     function AddPage($url, $priority = 1, $lastmod = '', $changefreq = 'monthly'){
         if (!in_array($url, $this->ignore)) {
             $page = array();
-            $page['loc'] = $url;
+            $page['loc'] = $this->prepareLocation($url);
             $page['priority'] = $priority;
             if ($lastmod != '') {
                 $page['lastmod'] = $lastmod;
@@ -67,18 +64,27 @@ class sitemapXmlExt {
         $this->ignore[] = $url;
     }
     /***************************************/
-    function CalcPriorBySlash($link) {
-        $link = str_replace(array('http://','https://'), '', $link);
-        list($host, $port) = explode(':', $_SERVER['HTTP_HOST']);
-        $link = str_replace($host, '', $link);
-        $prior = 0.8 - (substr_count (trim($link, '/'), '/') * 0.1);
+    function CalcPriorBySlash($url) {
+        $url = str_replace($this->HomeUrl, '', $url);
+        $prior = 0.8 - (substr_count (trim($url, '/'), '/') * 0.1);
         if ($prior < 0.4) {
             $prior = 0.4;
         }
         return $prior;
     }
     /***************************************/
-    function AddPagesFromIBlock ($parentloc, $arIBlocks) {
+    function prepareLocation($url) {
+        if (mb_strpos($url, $this->HomeUrl) === false) {
+            if (mb_substr($url, 0, 1) != '/') {
+                $url = '/'.$url;
+            };
+            $url = $this->HomeUrl . $url;
+        };
+        return $url;
+    }
+    /***************************************/
+    function AddPagesFromIBlock () {
+        $arIBlocks = $this->iBlocks;
         if (is_array($arIBlocks)) {
             foreach ($arIBlocks as $iBlock) {
                 if ($iBlock['SECTION'] != 'N') {
@@ -167,10 +173,12 @@ class sitemapXmlExt {
         return $result;
     }
 
+    /*********************************** */
     function AddToSitemapIndex($linkToSitemap) {
         $this->sitemap[] = $linkToSitemap;
     }
 
+    /*********************************** */
     function ShowSitemapIndex() {
         $sitemaps = $this->sitemap;
         if (is_array($sitemaps)){

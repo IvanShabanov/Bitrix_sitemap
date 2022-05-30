@@ -1,17 +1,31 @@
 <?
 include_once(__DIR__.'/class_sitemap.php');
 
-CModule::IncludeModule("iblock");
+\Bitrix\Main\Loader::includeModule("iblock");
 
 function GenerateSitemapXmlExt () {
-    $http = 'https://';
-    list($SERVER_HTTP_HOST, $port) = explode(':', $_SERVER['HTTP_HOST']);
+    $context = \Bitrix\Main\Application::getInstance()->getContext();
+    $server = $context->getServer();
+
+    if ($server->getServerPort() !== 80) {
+        $http = 'https://';
+    } else {
+        $http = 'http://';
+    };
+
+    if (trim(SITE_SERVER_NAME) == '') {
+        $SERVER_HTTP_HOST = $server->getHttpHost();
+        if (strpos($SERVER_HTTP_HOST,':')) {
+            list($SERVER_HTTP_HOST, $port) = explode(':', $SERVER_HTTP_HOST);
+        }
+    } else {
+        $SERVER_HTTP_HOST = SITE_SERVER_NAME;
+    };
+
     $home_url = $http.$SERVER_HTTP_HOST;
-    $document_root = $_SERVER['DOCUMENT_ROOT'];
+    $document_root =  $server->getDocumentRoot();
+
     if ($document_root == '') {
-        /* Если $_SERVER['DOCUMENT_ROOT'] пустой,
-            по проверим весь путь до текущего файла
-            и путь до bitrix или local и будет $_SERVER['DOCUMENT_ROOT'] */
         $dirs = realpath(dirname(__FILE__));
         if (strpos($dirs, '/local/') !== false) {
             list($document_root, $trash) = explode('/local/', $dirs);
@@ -33,7 +47,7 @@ function GenerateSitemapXmlExt () {
     /* Максимально кол-во страниц в одном sitemap */
     $items_on_page = 50000; /* Максимальное кол-во по Google и Yandex - 50000 */
 
-    $sitemap = new sitemapXmlExt($arBlocks);
+    $sitemap = new sitemapXmlExt($home_url, $arBlocks);
     /* Добавим главную страницу */
     $sitemap->AddPage($home_url);
     /* Добавим страницы из файлов меню */
@@ -43,7 +57,7 @@ function GenerateSitemapXmlExt () {
         }
     }
     /* Сгенерируем остальные страницы */
-    $sitemap->generate($home_url);
+    $sitemap->generate();
 
 
     /* Запишем все в файл/ы */

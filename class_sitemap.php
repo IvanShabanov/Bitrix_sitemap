@@ -45,6 +45,7 @@ class sitemapXmlExt {
     }
     /***************************************/
     function AddPage($url, $priority = 1, $lastmod = '', $changefreq = 'monthly'){
+        $url = str_replace('/index.php', '/', $url);
         if (!in_array($url, $this->ignore)) {
             $page = array();
             $page['loc'] = $this->prepareLocation($url);

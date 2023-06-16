@@ -39,8 +39,10 @@ function GenerateSitemapXmlExt () {
     $arBlocks[] = array(
         'IBLOCK_ID' => 1,
         'SECTION' => 'Y', /* Y/N - влючать ли разделы инфоблока */
-        'DETAIL' => 'Y'   /* Y/N - влючать ли страницы элементов инфоблока */
+        'DETAIL' => 'Y',   /* Y/N - влючать ли страницы элементов инфоблока */
+        'DETAIL_FILTER' => []  /* Фильтр для элементов инфоблока */
     );
+
     /* Файлы менющек */
     $arMenus[] = $document_root.'/.top.menu.php';
 

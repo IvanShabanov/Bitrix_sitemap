@@ -92,11 +92,14 @@ class sitemapXmlExt {
                     $arSectionIBlockIDs[] = $iBlock['IBLOCK_ID'];
                 };
                 if ($iBlock['DETAIL'] != 'N') {
-                    $arDetailIBlockIDs[] = $iBlock['IBLOCK_ID'];
+                    if ((isset($iBlock['DETAIL_FILTER'])) && (is_array($iBlock['DETAIL_FILTER'])) && (count($iBlock['DETAIL_FILTER']) > 0)) {
+						$arDetailIBlockFilter[$iBlock['IBLOCK_ID']] = $iBlock['DETAIL_FILTER'];
+					} else {
+                        $arDetailIBlockIDs[] = $iBlock['IBLOCK_ID'];
+					}
                 }
             }
 
-            $i = 0;
             /* Вытащим все разделы */
             if (count($arSectionIBlockIDs) > 0) {
                 $arSort = array(
@@ -109,7 +112,6 @@ class sitemapXmlExt {
                 $arSelect = array();
                 $res = CIBlockSection::GetList($arSort, $arFilter, true, $arSelect);
                 while ($arSection = $res->GetNext()) {
-                    $page = array();
                     $loc = $parentloc.$arSection['SECTION_PAGE_URL'];
                     $prior = $this->CalcPriorBySlash($loc);
                     $this->AddPage($loc, $prior, date('Y-m-01'), 'monthly');
@@ -123,15 +125,29 @@ class sitemapXmlExt {
                 "ACTIVE"=>"Y"
             );
             $res = CIBlockElement::GetList(array(), $arFilter, false, array("nPageSize"=>500000), $arSelect);
-            $i = 0;
             while ($ob = $res->GetNextElement()) {
                 $arFields = $ob->GetFields();
-                $page = array();
                 $loc = $parentloc.$arFields['DETAIL_PAGE_URL'];
                 $prior = $this->CalcPriorBySlash($loc);;
                 $this->AddPage($loc, $prior, date('Y-m-d', strtotime($arFields['TIMESTAMP_X'])), 'monthly');
-                $i++;
             }
+
+            if (count($arDetailIBlockFilter) > 0) {
+				foreach ($arDetailIBlockFilter as $IBlockID => $arFilter) {
+					$arSelect = ["*"];
+					$arFilter["IBLOCK_ID"] = $IBlockID;
+					$arFilter["ACTIVE_DATE"] = "Y";
+					$arFilter["ACTIVE"] = "Y";
+					$res = \CIBlockElement::GetList(array(), $arFilter, false, array("nPageSize" => 500000), $arSelect);
+					while ($ob = $res->GetNextElement()) {
+						$arFields = $ob->GetFields();
+						$loc = $arFields['DETAIL_PAGE_URL'];
+						$prior = $this->CalcPriorBySlash($loc);;
+						$this->AddPage($loc, $prior, date('Y-m-d', strtotime($arFields['TIMESTAMP_X'])), 'monthly');
+					}
+				}
+			}
+
         }
     }
     /******************************************************/

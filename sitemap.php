@@ -68,7 +68,7 @@ function GenerateSitemapXmlExt () {
     if ($maxfiles == 1) {
         file_put_contents($document_root.'/sitemap.xml', $sitemap->Show());
     } else {
-        while ($maxfiles >= 0) {
+        while ($maxfiles > 0) {
             $fileSitemap = $document_root.'/sitemap_'.$maxfiles.'.xml';
             $sitemap->AddToSitemapIndex($home_url.'/sitemap_'.$maxfiles.'.xml');
             file_put_contents($fileSitemap, $sitemap->Show($maxfiles * $items_on_page, $items_on_page));

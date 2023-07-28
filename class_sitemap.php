@@ -86,10 +86,18 @@ class sitemapXmlExt {
     /***************************************/
     function AddPagesFromIBlock () {
         $arIBlocks = $this->iBlocks;
+        $arSectionIBlockFilter = [];
+        $arSectionIBlockIDs = [];
+        $arDetailIBlockFilter = [];
+        $arDetailIBlockIDs = [];
         if (is_array($arIBlocks)) {
             foreach ($arIBlocks as $iBlock) {
                 if ($iBlock['SECTION'] != 'N') {
-                    $arSectionIBlockIDs[] = $iBlock['IBLOCK_ID'];
+                    if ((isset($iBlock['SECTION_FILTER'])) && (is_array($iBlock['SECTION_FILTER'])) && (count($iBlock['SECTION_FILTER']) > 0)) {
+                        $arSectionIBlockFilter[$iBlock['IBLOCK_ID']] = $iBlock['SECTION_FILTER'];
+                    } else {
+                        $arSectionIBlockIDs[] = $iBlock['IBLOCK_ID'];
+                    }
                 };
                 if ($iBlock['DETAIL'] != 'N') {
                     if ((isset($iBlock['DETAIL_FILTER'])) && (is_array($iBlock['DETAIL_FILTER'])) && (count($iBlock['DETAIL_FILTER']) > 0)) {
@@ -102,14 +110,12 @@ class sitemapXmlExt {
 
             /* Вытащим все разделы */
             if (count($arSectionIBlockIDs) > 0) {
-                $arSort = array(
-                    "left_margin"=>"asc",
-                );
-                $arFilter = array(
+                $arSort = ["left_margin"=>"asc"];
+                $arFilter = [
                     'IBLOCK_ID' => $arSectionIBlockIDs,
                     'ACTIVE' => 'Y'
-                );
-                $arSelect = array();
+                ];
+                $arSelect = [];
                 $res = CIBlockSection::GetList($arSort, $arFilter, true, $arSelect);
                 while ($arSection = $res->GetNext()) {
                     $loc = $parentloc.$arSection['SECTION_PAGE_URL'];
@@ -117,13 +123,27 @@ class sitemapXmlExt {
                     $this->AddPage($loc, $prior, date('Y-m-01'), 'monthly');
                 }
             }
+            if (count($arSectionIBlockFilter) > 0) {
+                foreach ($arSectionIBlockFilter as $IBlockID => $arFilter) {
+                    $arSort = ["left_margin"=>"asc"];
+                    $arFilter['IBLOCK_ID'] = $IBlockID;
+                    $arFilter['ACTIVE'] = 'Y';
+                    $arSelect = ["*"];
+                    $res = CIBlockSection::GetList($arSort, $arFilter, true, $arSelect);
+                    while ($arSection = $res->GetNext()) {
+                        $loc = $parentloc.$arSection['SECTION_PAGE_URL'];
+                        $prior = $this->CalcPriorBySlash($loc);
+                        $this->AddPage($loc, $prior, date('Y-m-01'), 'monthly');
+                    }
+                }
+            }
             /* Вытащим все елементы */
-            $arSelect = array("*");
-            $arFilter = array(
+            $arSelect = ["*"];
+            $arFilter = [
                 "IBLOCK_ID"=>$arDetailIBlockIDs,
                 "ACTIVE_DATE"=>"Y",
                 "ACTIVE"=>"Y"
-            );
+            ];
             $res = CIBlockElement::GetList(array(), $arFilter, false, array("nPageSize"=>500000), $arSelect);
             while ($ob = $res->GetNextElement()) {
                 $arFields = $ob->GetFields();

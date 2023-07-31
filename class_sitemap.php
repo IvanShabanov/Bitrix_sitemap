@@ -51,7 +51,7 @@ class sitemapXmlExt {
 			$page['loc'] = $this->prepareLocation($url);
 			$page['priority'] = $priority;
 			if ($lastmod != '') {
-				$page['lastmod'] = $lastmod;
+				$page['lastmod'] = date('Y-m-d', strtotime($lastmod));
 			} else {
 				$page['lastmod'] = date('Y-m-01');
 			}
@@ -196,9 +196,9 @@ class sitemapXmlExt {
 				if ($val['loc'] != '') {
 					$result .= '<url>';
 					foreach ($val as $valkey=>$valvalue) {
+						$valkey = htmlspecialchars($valkey, ENT_XML1);
+						$valvalue = htmlspecialchars($valvalue, ENT_XML1);
 						if ((trim($valvalue) != '') && ($valkey != 'title')) {
-							$valkey = htmlspecialchars($valkey, ENT_XML1);
-							$valvalue = htmlspecialchars($valvalue, ENT_XML1);
 							$result .= '<'.$valkey.'>'.$valvalue.'</'.$valkey.'>';
 						}
 					}
@@ -225,7 +225,7 @@ class sitemapXmlExt {
 			foreach ($sitemaps as $sitemap) {
 				$result .= '<sitemap>';
 				$result .= '<loc>'.$sitemap.'</loc>';
-				$result .= '<lastmod>'.date().'</lastmod>';
+				$result .= '<lastmod>'.date('Y-m-d').'</lastmod>';
 				$result .= '</sitemap>';
 			}
 		}

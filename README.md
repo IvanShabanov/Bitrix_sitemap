@@ -3,13 +3,20 @@ Sitemap.xml для 1С Битрикс
 
 1) Скопировать файлы в php_interface
 
-2) Настроить файл sitemap.php
+2) В настройках сайта проверить настроено ли
 
-- Настройте все инфоблоки, чтобы в них правильно формировались ссылки на страницы.
+   - URL сервера (без http://)
 
-- Включите Все инфоблоки которые надо вывести в файл
+3) В настроках инфоблоков проверить настройки
 
-      $arBlocks[] = array(
+   - URL страницы раздела
+   - URL страницы детального просмотра
+
+4) Настроить файл sitemap.php
+
+   - Включите Все инфоблоки которые надо вывести в файл
+
+      $arResult['IBLOCK'][] = array(
             'IBLOCK_ID' => 1,
             'SECTION' => 'Y',
             'SECTION_FILTER' => [],
@@ -18,23 +25,28 @@ Sitemap.xml для 1С Битрикс
       );
 
 
-- Добавьте все файлы меню используемые на сайте
+   - Добавьте все файлы меню используемые на сайте
 
-      $sitemap->AddPagesFromMenuFile('.top.menu.php', $http.$host);
+      $arResult['MENU']
 
-- Добавьте страницы
+   - Добавьте страницы
 
-      $sitemap->AddPage($http.$host.'/stock/');
+      $arResult['URLS'];
 
-- Добавьте игнорируемые страницы (страницы которые не должны попасть в файл)
+   - Добавьте игнорируемые страницы (страницы которые не должны попасть в файл)
 
-      $sitemap->AddIgnorePage($http.$host.'/hidden/');
+      $arResult['IGNORE'];
 
-3) в init.php добавить строчку
+5) в init.php добавить строчку
 
       include_once('sitemap.php');
 
 
 4) Добавить агента
 
-      GenerateSitemapXmlExt();
+      GenerateSitemapXmlExt(siteId, useHttps);
+
+      siteId -  id сайта, по умолчанию "s1"
+      useHttps - true/false используется ли hhtps
+
+

@@ -3,10 +3,10 @@ class sitemapXmlExt
 {
 
 	public $ignore = [];
-	public  $iBlocks = [];
-	public  $pages = [];
-	public  $sitemap = [];
-	public  $HomeUrl = '/';
+	public $iBlocks = [];
+	public $pages = [];
+	public $sitemap = [];
+	public $HomeUrl = '/';
 
 	function __construct($home_url, $iBlocks = [], $ignorePages = [])
 	{
